@@ -5,7 +5,6 @@
 
 namespace py = pybind11;
 
-
 void softmax_regression_epoch_cpp(const float *X, const unsigned char *y,
 								  float *theta, size_t m, size_t n, size_t k,
 								  float lr, size_t batch)
@@ -33,6 +32,12 @@ void softmax_regression_epoch_cpp(const float *X, const unsigned char *y,
      */
 
     /// BEGIN YOUR CODE
+    // for (int i = 0; i < m; i += batch) {
+    //     int end = std::min(i + batch, m);
+    //     float* x_start = X + i * n;
+    //     float* y_start = y + i;
+
+    // }
 
     /// END YOUR CODE
 }
