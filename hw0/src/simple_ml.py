@@ -20,7 +20,8 @@ def add(x, y):
         Sum of x + y
     """
     ### BEGIN YOUR CODE
-    pass
+    #pass
+    return x + y
     ### END YOUR CODE
 
 
@@ -48,7 +49,23 @@ def parse_mnist(image_filename, label_filename):
                 for MNIST will contain the values 0-9.
     """
     ### BEGIN YOUR CODE
-    pass
+    #pass
+    with gzip.open(image_filename, "rb") as f:
+        magic, size = struct.unpack(">II", f.read(8))
+        nrows, ncols = struct.unpack(">II", f.read(8))
+        x = np.frombuffer(f.read(), dtype=np.dtype(np.uint8).newbyteorder('>'))
+        x = x.reshape((size, nrows*ncols))
+        x = x.astype(np.float32)
+        min_ = x.min()
+        max_ = x.max()
+        range = max_ - min_
+        x = x / range
+        
+    with gzip.open(label_filename, "rb") as f:
+        magic, size = struct.unpack(">II", f.read(8))
+        y = np.frombuffer(f.read(), dtype=np.dtype(np.uint8).newbyteorder('>'))
+        y = y.reshape(( size, ))
+    return x, y
     ### END YOUR CODE
 
 
@@ -68,7 +85,28 @@ def softmax_loss(Z, y):
         Average softmax loss over the sample.
     """
     ### BEGIN YOUR CODE
-    pass
+    #pass
+    #对所有的数据取指数
+    # e = np.exp(Z)
+    # #对于每一行，相加
+    # add = np.sum(e, axis=1)
+    # #获取索引
+    # index_dim0 = np.arange(y.size).tolist()
+    # index_dim1 = y.tolist()
+    # index = [index_dim0, index_dim1]
+    # #根据索引来取数据
+    # dividedVal = e[tuple(index)] / add 
+    # logValue = np.log(dividedVal)
+    # logValue = logValue * (-1)
+    # # print("logvalue", logValue)
+    # avgValue = np.mean(logValue)
+    # return avgValue 
+    Z_exp = np.exp(Z)
+    Z_exp_sum = np.sum(Z_exp, axis=1)
+    Z = Z_exp / Z_exp_sum[:, np.newaxis]
+    
+    return -np.mean(np.log(Z[np.arange(Z.shape[0]), y]))
+
     ### END YOUR CODE
 
 
@@ -91,7 +129,21 @@ def softmax_regression_epoch(X, y, theta, lr = 0.1, batch=100):
         None
     """
     ### BEGIN YOUR CODE
-    pass
+    # pass
+    m = X.shape[0] #number of examples
+    k = theta.shape[1] #number of classes
+    
+    for i in range(0, m, batch):
+        x_batch = X[ i: i + batch]
+        y_batch = y[ i: i + batch]
+        
+        z = np.exp(x_batch @ theta)
+        
+        z /= np.sum(z, axis=1)[:, np.newaxis]
+        
+        grad = 1/batch * x_batch.T @ (z - np.eye(k)[y_batch])
+        theta -= grad * lr
+    
     ### END YOUR CODE
 
 
@@ -118,7 +170,30 @@ def nn_epoch(X, y, W1, W2, lr = 0.1, batch=100):
         None
     """
     ### BEGIN YOUR CODE
-    pass
+    # pass
+    num_examples = X.shape[0]
+    num_classes = W2.shape[1]
+    print(num_classes)
+    print(num_examples)
+    for i in range(0 , num_examples, batch):
+        x_batch = X[i: i + batch]
+        y_batch = y[i: i + batch]
+        xw1 = x_batch @ W1 # batch_size * hidden_size
+        xw1[xw1 < 0] = 0 # Relu 
+        z1 =xw1
+        expz1w2 = np.exp(z1 @ W2) # batch_size * num_cls
+        expz1w2 = expz1w2 / (np.sum(expz1w2, axis=1))[:, np.newaxis]
+        g2 = expz1w2 - np.eye(num_classes)[y_batch]
+        z1_copy = z1.copy()
+        # z1_copy[z1_copy > 0] = 1
+        # g1 = z1_copy * (g2 @ W2.T)
+        g1 = (g2 @ W2.T) * (z1_copy > 0)
+        grad_w1 = 1/batch * x_batch.T @ g1
+        grad_w2 = 1/batch * z1.T @ g2
+        W1 -= grad_w1 * lr
+        W2 -= grad_w2 * lr
+        
+        
     ### END YOUR CODE
 
 
